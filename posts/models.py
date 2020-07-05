@@ -10,7 +10,7 @@ class Post(models.Model):
         ]
 
     uuid = models.UUIDField(default=uuid4, null=False, blank=True)
-    text = models.CharField(max_length=250, null=False, blank=False)
+    text = models.CharField(max_length=250, null=False)
     pins = models.IntegerField(default=0, null=False, blank=True)  # likes
     date_created = models.DateTimeField(auto_now_add=True, blank=True)
     visible = models.BooleanField(default=True, null=False, blank=True)
@@ -30,7 +30,7 @@ class Comment(models.Model):
         ]
 
     uuid = models.UUIDField(default=uuid4, null=False, blank=True)
-    text = models.CharField(max_length=100, null=False, blank=False)
+    text = models.CharField(max_length=100, null=False)
     date_created = models.DateTimeField(auto_now_add=True, blank=True)
 
     author = models.ForeignKey(

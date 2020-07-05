@@ -16,5 +16,8 @@ class User(AbstractUser):
 
     objects = UserManager()
 
+    REQUIRED_FIELDS = []
+    USERNAME_FIELD = 'username'
+
     def __str__(self):
         return self.username
