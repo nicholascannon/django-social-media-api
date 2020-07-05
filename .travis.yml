@@ -1,0 +1,15 @@
+language: python
+python:
+  - '3.7'
+before_install:
+  - export DJANGO_SETTINGS_MODULE=mysite.settings
+env:
+  - SECRET=somesecret
+jobs:
+  include:
+    - stage: Django Tests
+      before_script:
+        - python manage.py check
+        - python manage.py makemigrations
+        - python manage.py migrate
+      script: python manage.py test
