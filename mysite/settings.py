@@ -39,6 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+
+    'rest_framework',
+
     'users',
 ]
 
@@ -123,3 +127,27 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'users.User'
+
+SITE_ID = 1
+
+LOGIN_REDIRECT_URL = '/'
+
+
+# Rest Config
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    # TODO: set this in prod settings (no browsable api in prod)
+    # 'DEFAULT_RENDERER_CLASSES': [
+    #     'rest_framework.renderers.JSONRenderer',
+    # ],
+}
+
+
+# SimpleJWT Config
+SIMPLE_JWT = {
+    'ROTATE_REFRESH_TOKENS': True,  # send new refresh token when refreshing
+}

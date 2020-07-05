@@ -3,11 +3,11 @@ certifi==2020.6.20
 chardet==3.0.4
 defusedxml==0.6.0
 Django==3.0.8
-django-allauth==0.42.0
-django-rest-auth==0.9.5
 djangorestframework==3.11.0
+djangorestframework-simplejwt==4.4.0
 idna==2.10
 oauthlib==3.1.0
+PyJWT==1.7.1
 python-dotenv==0.14.0
 python3-openid==3.2.0
 pytz==2020.1
