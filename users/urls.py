@@ -8,6 +8,7 @@ from rest_framework_simplejwt.views import (
 from . import views
 
 urlpatterns = [
+    path('user/<str:username>/', views.user_details, name='user_details'),
     path('user/', views.user_details, name='user_details'),
     path('password/change/', views.change_password, name='change_password'),
     path('register/', views.register, name='register'),

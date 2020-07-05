@@ -11,12 +11,15 @@ User = get_user_model()
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def user_details(request):
+def user_details(request, username=None):
     """
     Return user details for logged in user.
     """
-    user = UserDetailsSerializer(instance=request.user)
+    if username:
+        user = UserDetailsSerializer(
+            instance=User.objects.get(username=username))
+    else:
+        user = UserDetailsSerializer(instance=request.user)
     return Response(user.data)
 
 

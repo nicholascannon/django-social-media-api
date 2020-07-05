@@ -143,6 +143,17 @@ class TestUserApi(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, user_data.data)
 
+    def test_user_details_username(self):
+        res = self._register_user()
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        user = User.objects.get(username='test')
+        user_data = UserDetailsSerializer(instance=user)
+
+        res = self.client.get('/auth/user/test/')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, user_data.data)
+
     def test_password_change(self):
         res = self._register_user()
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
