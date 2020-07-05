@@ -51,4 +51,6 @@ def register(request):
             user.save()
             return Response(status=s.HTTP_201_CREATED)
 
-    return Response(data.errors, status=s.HTTP_400_BAD_REQUEST)
+        return Response(user.error_messages, status=s.HTTP_400_BAD_REQUEST)
+
+    return Response(data.error_messages, status=s.HTTP_400_BAD_REQUEST)

@@ -80,6 +80,11 @@ class TestUserApi(APITestCase):
         self.assertIsNotNone(user)
         self.assertTrue(user.check_password('123tester123'))
 
+    def test_same_username(self):
+        self._register_user()
+        res = self._register_user()
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_diff_passwords(self):
         res = self.client.post('/auth/register/', data={
             'username': 'test',
