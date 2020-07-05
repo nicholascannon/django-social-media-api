@@ -183,3 +183,21 @@ class TestUserApi(APITestCase):
 
         user = User.objects.get(username='test')
         self.assertTrue(user.check_password('123tester123'))
+
+    def test_token_refresh(self):
+        res = self._register_user()
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        # login
+        res = self.client.post('/auth/login/', data={
+            'username': 'test',
+            'password': '123tester123',
+        })
+        refresh = res.data["refresh"]
+
+        res = self.client.post('/auth/token/refresh/', data={
+            'refresh': refresh
+        }, format='json')
+        self.assertTrue(res.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(res.data['access'])
+        self.assertTrue(res.data['refresh'])
