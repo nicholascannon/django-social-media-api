@@ -2,6 +2,17 @@ from django.contrib import admin
 
 from . import models
 
-admin.register(models.Post)
-admin.register(models.Comment)
-admin.register(models.PostReport)
+
+@admin.register(models.Post)
+class PostAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.Comment)
+class CommentAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.PostReport)
+class PostReportAdmin(admin.ModelAdmin):
+    pass
