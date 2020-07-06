@@ -1,13 +1,14 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
+from django.urls import reverse
 
 from rest_framework.test import APITestCase
 from rest_framework import status
 
 import datetime as dt
 
-from .serializers import UserDetailsSerializer
+from .serializers import UserSerializer
 
 User = get_user_model()
 
@@ -66,7 +67,7 @@ class UserTests(TestCase):
 class TestUserApi(APITestCase):
 
     def _register_user(self):
-        return self.client.post('/auth/register/', data={
+        return self.client.post(reverse('register'), data={
             'username': 'test',
             'password1': '123tester123',
             'password2': '123tester123',
@@ -86,7 +87,7 @@ class TestUserApi(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_diff_passwords(self):
-        res = self.client.post('/auth/register/', data={
+        res = self.client.post(reverse('register'), data={
             'username': 'test',
             'password1': '123tester',
             'password2': '123tester123',
@@ -101,7 +102,7 @@ class TestUserApi(APITestCase):
         res = self._register_user()
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
-        res = self.client.post('/auth/login/', data={
+        res = self.client.post(reverse('token_login'), data={
             'username': 'test',
             'password': '123tester123',
         })
@@ -110,7 +111,7 @@ class TestUserApi(APITestCase):
         self.assertTrue(res.data['refresh'])
 
     def test_bad_login(self):
-        res = self.client.post('/auth/login/', data={
+        res = self.client.post(reverse('token_login'), data={
             'username': 'test',
             'password': '123tester123',
         })
@@ -120,7 +121,7 @@ class TestUserApi(APITestCase):
         res = self._register_user()
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
-        res = self.client.post('/auth/login/', data={
+        res = self.client.post(reverse('token_login'), data={
             'username': 'test',
             'password': 'wrong_password',
         })
@@ -131,15 +132,16 @@ class TestUserApi(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         # login
-        res = self.client.post('/auth/login/', data={
+        res = self.client.post(reverse('token_login'), data={
             'username': 'test',
             'password': '123tester123',
         })
 
         user = User.objects.get(username='test')
-        user_data = UserDetailsSerializer(instance=user)
+        user_data = UserSerializer(instance=user)
 
-        res = self.client.get('/auth/user/', HTTP_AUTHORIZATION=f'Bearer {res.data["access"]}')
+        res = self.client.get(reverse('current_user_details'),
+                              HTTP_AUTHORIZATION=f'Bearer {res.data["access"]}')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, user_data.data)
 
@@ -148,9 +150,9 @@ class TestUserApi(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         user = User.objects.get(username='test')
-        user_data = UserDetailsSerializer(instance=user)
+        user_data = UserSerializer(instance=user)
 
-        res = self.client.get('/auth/user/test/')
+        res = self.client.get(reverse('user_details', args=['test']))
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, user_data.data)
 
@@ -159,19 +161,19 @@ class TestUserApi(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         # login
-        res = self.client.post('/auth/login/', data={
+        res = self.client.post(reverse('token_login'), data={
             'username': 'test',
             'password': '123tester123',
         })
         token = res.data["access"]
 
-        res = self.client.post('/auth/password/change/',
+        res = self.client.post(reverse('change_password'),
                                data={
                                    'password1': 'newpassword',
                                    'password2': 'newpassword',
-                               },
-                               format='json',
-                               HTTP_AUTHORIZATION=f'Bearer {res.data["access"]}')
+        },
+            format='json',
+            HTTP_AUTHORIZATION=f'Bearer {res.data["access"]}')
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
         user = User.objects.get(username='test')
@@ -182,19 +184,19 @@ class TestUserApi(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         # login
-        res = self.client.post('/auth/login/', data={
+        res = self.client.post(reverse('token_login'), data={
             'username': 'test',
             'password': '123tester123',
         })
         token = res.data["access"]
 
-        res = self.client.post('/auth/password/change/',
+        res = self.client.post(reverse('change_password'),
                                data={
                                    'password1': 'newpassword',
                                    'password2': 'badpassword',
-                               },
-                               format='json',
-                               HTTP_AUTHORIZATION=f'Bearer {res.data["access"]}')
+        },
+            format='json',
+            HTTP_AUTHORIZATION=f'Bearer {res.data["access"]}')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
         user = User.objects.get(username='test')
@@ -205,15 +207,31 @@ class TestUserApi(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         # login
-        res = self.client.post('/auth/login/', data={
+        res = self.client.post(reverse('token_login'), data={
             'username': 'test',
             'password': '123tester123',
         })
         refresh = res.data["refresh"]
 
-        res = self.client.post('/auth/token/refresh/', data={
+        res = self.client.post(reverse('token_refresh'), data={
             'refresh': refresh
         }, format='json')
         self.assertTrue(res.status_code, status.HTTP_201_CREATED)
         self.assertTrue(res.data['access'])
         self.assertTrue(res.data['refresh'])
+
+    def test_token_verify(self):
+        res = self._register_user()
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        # login
+        res = self.client.post(reverse('token_login'), data={
+            'username': 'test',
+            'password': '123tester123',
+        })
+        access = res.data["access"]
+
+        res = self.client.post(reverse('token_verify'), data={
+            'access': access
+        }, format='json')
+        self.assertTrue(res.status_code, status.HTTP_200_OK)

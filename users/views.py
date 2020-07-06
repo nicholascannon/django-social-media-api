@@ -5,22 +5,32 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status as s
 
-from .serializers import UserSerializer, UserRegisterSerializer, UserDetailsSerializer
+from .serializers import RegisterSerializer, UserSerializer, PasswordChangeSerializer
 
 User = get_user_model()
 
 
 @api_view(['GET'])
-def user_details(request, username=None):
+@permission_classes([IsAuthenticated])
+def current_user_details(request, username=None):
     """
     Return user details for logged in user.
     """
-    if username:
-        user = UserDetailsSerializer(
-            instance=User.objects.get(username=username))
-    else:
-        user = UserDetailsSerializer(instance=request.user)
+    user = UserSerializer(instance=request.user)
     return Response(user.data)
+
+
+@api_view(['GET'])
+def user_details(request, username):
+    """
+    Return user details by username.
+    """
+    try:
+        serializer = UserSerializer(
+            instance=User.objects.get(username=username))
+        return Response(serializer.data)
+    except User.DoesNotExist:
+        return Response(status=s.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])
@@ -29,14 +39,13 @@ def change_password(request):
     """
     Change user password.
     """
-    if request.data.get('password1') and request.data.get('password2'):
-        if request.data.get('password1') == request.data.get('password2'):
-            request.user.set_password(request.data['password1'])
-            request.user.save()
+    data = PasswordChangeSerializer(data=request.data)
+    if data.is_valid():
+        request.user.set_password(data.validated_data['password1'])
+        request.user.save()
+        return Response(status=s.HTTP_200_OK)
 
-            return Response(status=s.HTTP_200_OK)
-
-    return Response({'err': 'Passwords must match'}, status=s.HTTP_400_BAD_REQUEST)
+    return Response(data.errors, status=s.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -44,7 +53,7 @@ def register(request):
     """
     Register new user account.
     """
-    data = UserRegisterSerializer(data=request.data)
+    data = RegisterSerializer(data=request.data)
     if data.is_valid():
         user = UserSerializer(data={
             'username': data.validated_data['username'],
@@ -54,6 +63,6 @@ def register(request):
             user.save()
             return Response(status=s.HTTP_201_CREATED)
 
-        return Response(user.error_messages, status=s.HTTP_400_BAD_REQUEST)
+        return Response(user.errors, status=s.HTTP_400_BAD_REQUEST)
 
-    return Response(data.error_messages, status=s.HTTP_400_BAD_REQUEST)
+    return Response(data.errors, status=s.HTTP_400_BAD_REQUEST)
