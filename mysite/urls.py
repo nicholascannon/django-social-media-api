@@ -17,8 +17,9 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('dashboard/', admin.site.urls),
-    path('auth/', include('users.urls')),
+    path('admin/', admin.site.urls),
+    path('accounts/', include('users.urls')),
+    path('posts/', include('posts.urls')),
 ]
 
 handler500 = 'rest_framework.exceptions.server_error'

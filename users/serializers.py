@@ -10,7 +10,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['uuid', 'username', 'date_joined',
                   'is_superuser', 'password']
         extra_kwargs = {'password': {'write_only': True}}
-        read_only_fields = ['uuid', 'date_joined', 'is_superuser']
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
