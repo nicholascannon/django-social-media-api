@@ -69,8 +69,8 @@ class TestUserApi(APITestCase):
     def _register_user(self):
         return self.client.post(reverse('register'), data={
             'username': 'test',
-            'password1': '123tester123',
-            'password2': '123tester123',
+            'password': '123tester123',
+            'confirm_password': '123tester123',
         }, format='json')
 
     def test_user_registration(self):
@@ -89,8 +89,8 @@ class TestUserApi(APITestCase):
     def test_diff_passwords(self):
         res = self.client.post(reverse('register'), data={
             'username': 'test',
-            'password1': '123tester',
-            'password2': '123tester123',
+            'password': '123tester',
+            'confirm_password': '123tester123',
         }, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
@@ -155,6 +155,7 @@ class TestUserApi(APITestCase):
         res = self.client.get(reverse('user_details', args=['test']))
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, user_data.data)
+        print(res.data)
 
     def test_password_change(self):
         res = self._register_user()
@@ -169,8 +170,8 @@ class TestUserApi(APITestCase):
 
         res = self.client.post(reverse('change_password'),
                                data={
-                                   'password1': 'newpassword',
-                                   'password2': 'newpassword',
+                                   'password': 'newpassword',
+                                   'confirm_password': 'newpassword',
         },
             format='json',
             HTTP_AUTHORIZATION=f'Bearer {res.data["access"]}')
@@ -192,8 +193,8 @@ class TestUserApi(APITestCase):
 
         res = self.client.post(reverse('change_password'),
                                data={
-                                   'password1': 'newpassword',
-                                   'password2': 'badpassword',
+                                   'password': 'newpassword',
+                                   'confirm_password': 'badpassword',
         },
             format='json',
             HTTP_AUTHORIZATION=f'Bearer {res.data["access"]}')

@@ -1,38 +1,34 @@
 from rest_framework import serializers
+from django.contrib.auth.hashers import make_password
 
 from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(max_length=128, write_only=True)
+    confirm_password = serializers.CharField(max_length=128, write_only=True)
 
     class Meta:
         model = User
         fields = ['uuid', 'username', 'date_joined',
-                  'is_superuser', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
-
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
-
-
-class RegisterSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150, min_length=3)
-    password1 = serializers.CharField(max_length=128)
-    password2 = serializers.CharField(max_length=128)
+                  'password', 'confirm_password']
+        read_only_fields = ['uuid', 'date_joined']
 
     def validate(self, data):
-        if data['password1'] != data['password2']:
-            raise serializers.ValidationError(detail='Passwords must match')
+        if data.get('password') != data.get('confirm_password'):
+            raise serializers.ValidationError('Passwords must match')
 
-        return super().validate(data)
+        del data['confirm_password']
+        data['password'] = make_password(data['password'])
+        return data
 
 
 class PasswordChangeSerializer(serializers.Serializer):
-    password1 = serializers.CharField(max_length=128)
-    password2 = serializers.CharField(max_length=128)
+    password = serializers.CharField(max_length=128)
+    confirm_password = serializers.CharField(max_length=128)
 
     def validate(self, data):
-        if data['password1'] != data['password2']:
+        if data['password'] != data['confirm_password']:
             raise serializers.ValidationError(detail='Passwords must match')
 
-        return super().validate(data)
+        return data

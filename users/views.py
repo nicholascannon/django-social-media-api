@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status as s
 
-from .serializers import RegisterSerializer, UserSerializer, PasswordChangeSerializer
+from .serializers import UserSerializer, PasswordChangeSerializer
 
 User = get_user_model()
 
@@ -41,7 +41,7 @@ def change_password(request):
     """
     data = PasswordChangeSerializer(data=request.data)
     if data.is_valid():
-        request.user.set_password(data.validated_data['password1'])
+        request.user.set_password(data.validated_data['password'])
         request.user.save()
         return Response(status=s.HTTP_200_OK)
 
@@ -53,16 +53,9 @@ def register(request):
     """
     Register new user account.
     """
-    data = RegisterSerializer(data=request.data)
-    if data.is_valid():
-        user = UserSerializer(data={
-            'username': data.validated_data['username'],
-            'password': data.validated_data['password1'],
-        })
-        if user.is_valid():
-            user.save()
-            return Response(status=s.HTTP_201_CREATED)
+    user = UserSerializer(data=request.data)
+    if user.is_valid():
+        user.save()
+        return Response(status=s.HTTP_201_CREATED)
 
-        return Response(user.errors, status=s.HTTP_400_BAD_REQUEST)
-
-    return Response(data.errors, status=s.HTTP_400_BAD_REQUEST)
+    return Response(user.errors, status=s.HTTP_400_BAD_REQUEST)
