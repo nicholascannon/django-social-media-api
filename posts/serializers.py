@@ -31,12 +31,3 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ['uuid', 'text', 'author', 'pins',
                   'comments', 'date_created', 'edited']
         read_only_fields = ['uuid', 'author', 'date_created', 'pins', 'edited']
-
-
-class PostReportSerializer(serializers.ModelSerializer):
-    post = PostSerializer()
-    user = UserSerializer()
-
-    class Meta:
-        model = models.PostReport
-        fields = '__all__'  # model is for admin use only

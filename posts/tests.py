@@ -175,3 +175,49 @@ class PostDetailView(APITestCase):
 
         p = Post.objects.get(pk=1)
         self.assertEqual(p.pins, 0)
+
+
+class PinPostViewTest(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create_user(username='test', password='password')
+        Post.objects.create(text='post1', author=user)
+        Post.objects.create(text='post2', author=user)
+        Post.objects.create(text='post3', author=user)
+        User.objects.create_user(username='test2', password='password')
+
+    def setUp(self):
+        res = self.client.post(reverse('token_login'), data={
+            'username': 'test',
+            'password': 'password',
+        })
+        self.token = res.data.get('access')
+        self.author = User.objects.get(pk=1)
+
+        res = self.client.post(reverse('token_login'), data={
+            'username': 'test2',
+            'password': 'password',
+        })
+        self.token2 = res.data.get('access')
+
+    def test_pin(self):
+        p = Post.objects.get(pk=1)
+        self.assertEqual(p.pins, 0)
+
+        res = self.client.put(reverse('pin_post', kwargs={'uuid': p.uuid}),
+                              HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.assertEqual(res.status_code, s.HTTP_200_OK)
+
+        p = Post.objects.get(pk=1)
+        self.assertEqual(p.pins, 1)
+
+    def test_pin_unauth(self):
+        p = Post.objects.get(pk=1)
+        self.assertEqual(p.pins, 0)
+
+        res = self.client.put(reverse('pin_post', kwargs={'uuid': p.uuid}))
+        self.assertEqual(res.status_code, s.HTTP_401_UNAUTHORIZED)
+
+        p = Post.objects.get(pk=1)
+        self.assertEqual(p.pins, 0)

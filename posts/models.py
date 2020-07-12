@@ -45,13 +45,3 @@ class Comment(models.Model):
         'users.User', related_name='comments', on_delete=models.CASCADE)
     post = models.ForeignKey(
         'Post', related_name='comments', on_delete=models.CASCADE)
-
-
-class PostReport(models.Model):
-    uuid = models.UUIDField(default=uuid4, null=False)
-    date_created = models.DateTimeField(auto_now_add=True)
-
-    post = models.ForeignKey(
-        'Post', related_name='reports', on_delete=models.CASCADE)
-    user = models.ForeignKey(
-        'users.User', related_name='reports', on_delete=models.CASCADE)
