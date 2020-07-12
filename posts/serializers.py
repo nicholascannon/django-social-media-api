@@ -1,11 +1,14 @@
 from rest_framework import serializers
 
 from . import models
-from users.serializers import UserDetailsSerializer
+from users.serializers import UserSerializer
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = UserDetailsSerializer(read_only=True)
+    """
+    Comment Serializer
+    """
+    author = UserSerializer(read_only=True)
     post = serializers.SlugRelatedField(slug_field='uuid', read_only=True)
 
     class Meta:
@@ -15,18 +18,24 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author = UserDetailsSerializer(read_only=True)
-    comments = CommentSerializer(read_only=True, many=True)
+    """
+    Serializer that provides an overview of the Post model. This serializer
+    summarises the comments and author models.
+    """
+    author = serializers.ReadOnlyField(source='author.username')
+    comments = serializers.IntegerField(
+        source='get_comment_count', read_only=True)
 
     class Meta:
         model = models.Post
-        fields = ['uuid', 'text', 'author', 'comments', 'pins', 'date_created']
-        read_only_fields = ['uuid', 'pins', 'date_created']
+        fields = ['uuid', 'text', 'author', 'pins',
+                  'comments', 'date_created', 'edited']
+        read_only_fields = ['uuid', 'author', 'date_created', 'pins', 'edited']
 
 
 class PostReportSerializer(serializers.ModelSerializer):
     post = PostSerializer()
-    user = UserDetailsSerializer()
+    user = UserSerializer()
 
     class Meta:
         model = models.PostReport
