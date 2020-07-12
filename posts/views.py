@@ -1,7 +1,12 @@
 from rest_framework.permissions import (
-    IsAuthenticated, IsAuthenticatedOrReadOnly)
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 from rest_framework.generics import (
-    ListCreateAPIView, RetrieveUpdateDestroyAPIView, DestroyAPIView)
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+    RetrieveDestroyAPIView
+)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status as s
@@ -49,7 +54,7 @@ class PostDetailAPIView(RetrieveUpdateDestroyAPIView):
     lookup_field = 'uuid'
 
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    permission_classes = [IsAuthorOrReadOnly]
 
     def perform_update(self, serializer):
         return serializer.save(edited=True)
@@ -60,7 +65,10 @@ class PinPostAPIView(APIView):
     Allows any authenticated user to pin (like) a post. This endpoint increments
     a posts pins by 1.
 
-    NOTE: Currently a user can pin the same post as many times as they like.
+    NOTE:   Currently a user can pin the same post as many times as they like. 
+            This could be avoided by pulling the pins out into their own table 
+            with one to one FK to a post and user, would require a check before
+            pinning post (some indexing on the table would be a good idea too).
 
     EXAMPLE:
         PUT -> /posts/<uuid>/pin/ -> increment post pins by 1
@@ -79,6 +87,12 @@ class PinPostAPIView(APIView):
 
 class CommentListCreateAPIView(ListCreateAPIView):
     """
+    Lists all the comments for a given post. Anon users can read comments. Must
+    be logged in to create comments on the post.
+
+    EXAMPLE:
+        GET -> /posts/<uuid>/comments/ -> returns all comments for post with uuid
+        POST -> /posts/<uuid>/comments/ -> create new comment on post with uuid
     """
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -92,12 +106,20 @@ class CommentListCreateAPIView(ListCreateAPIView):
         return serializer.save(author=self.request.user, post=post)
 
 
-class CommentDestroyAPIView(DestroyAPIView):
+class CommentRetrieveDestroyAPIView(RetrieveDestroyAPIView):
     """
+    Allows user to delete their comment on a post. UUID for the post and comment
+    required. Users can only delete their own comments. Also enable the retrieval
+    of a single comments details.
+
+    EXAMPLE:
+        DELETE -> /posts/<post_uuid>/comments/<comment_uuid>/ -> delete comment
     """
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthorOrReadOnly]  # No reads on this endpoint
+    permission_classes = [IsAuthorOrReadOnly]
 
     def get_object(self):
-        return Comment.objects.get(uuid=self.kwargs['comment_uuid'],
-                                   post_uuid=self.kwargs['post_uuid'])
+        comment = Comment.objects.get(uuid=self.kwargs['comment_uuid'],
+                                      post__uuid=self.kwargs['post_uuid'])
+        self.check_object_permissions(self.request, comment)
+        return comment

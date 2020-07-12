@@ -229,9 +229,6 @@ class CommentDetailViewTest(APITestCase):
     def setUpTestData(cls):
         user = User.objects.create_user(username='test', password='password')
         Post.objects.create(text='post1', author=user)
-        Post.objects.create(text='post2', author=user)
-        Post.objects.create(text='post3', author=user)
-        User.objects.create_user(username='test2', password='password')
 
     def setUp(self):
         res = self.client.post(reverse('token_login'), data={
@@ -240,12 +237,6 @@ class CommentDetailViewTest(APITestCase):
         })
         self.token = res.data.get('access')
         self.author = User.objects.get(pk=1)
-
-        res = self.client.post(reverse('token_login'), data={
-            'username': 'test2',
-            'password': 'password',
-        })
-        self.token2 = res.data.get('access')
 
         self.post = Post.objects.get(pk=1)
 
@@ -285,3 +276,53 @@ class CommentDetailViewTest(APITestCase):
         self.assertEqual(res.status_code, s.HTTP_200_OK)
         self.assertDictEqual(comments.data[0], res.data[0])
         self.assertDictEqual(comments.data[1], res.data[1])
+
+
+class CommentRetrieveDestroyViewTest(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create_user(username='test', password='password')
+        post = Post.objects.create(text='post1', author=user)
+        User.objects.create_user(username='test2', password='password')
+        Comment.objects.create(text='comment', author=user, post=post)
+
+    def setUp(self):
+        res = self.client.post(reverse('token_login'), data={
+            'username': 'test',
+            'password': 'password',
+        })
+        self.token = res.data.get('access')
+        self.author = User.objects.get(pk=1)
+        self.post = Post.objects.get(pk=1)
+        self.comment = Comment.objects.get(pk=1)
+
+        res = self.client.post(reverse('token_login'), data={
+            'username': 'test2',
+            'password': 'password',
+        })
+        self.token2 = res.data.get('access')
+
+        self.url = reverse('delete_comment', kwargs={
+                           'post_uuid': self.post.uuid,
+                           'comment_uuid': self.comment.uuid})
+
+    def test_delete_comment(self):
+        res = self.client.delete(self.url, HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.assertEqual(res.status_code, s.HTTP_204_NO_CONTENT)
+        self.assertEqual(Post.objects.get(pk=1).get_comment_count(), 0)
+
+    def test_delete_comment_unauth(self):
+        res = self.client.delete(self.url)
+        self.assertEqual(res.status_code, s.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Post.objects.get(pk=1).get_comment_count(), 1)
+
+    def test_delete_comment_wrong_user(self):
+        res = self.client.delete(self.url, HTTP_AUTHORIZATION=f'Bearer {self.token2}')
+        self.assertEqual(res.status_code, s.HTTP_403_FORBIDDEN)
+        self.assertEqual(Post.objects.get(pk=1).get_comment_count(), 1)
+
+    def test_get_comment(self):
+        comment = CommentSerializer(instance=self.comment)
+        res = self.client.get(self.url)
+        self.assertDictEqual(comment.data, res.data)
