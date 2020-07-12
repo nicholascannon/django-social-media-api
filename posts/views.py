@@ -84,7 +84,8 @@ class CommentListCreateAPIView(ListCreateAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        return Comment.objects.filter(post__uuid=self.kwargs['uuid'])
+        return Comment.objects.order_by('-date_created').filter(
+            post__uuid=self.kwargs['uuid'])
 
     def perform_create(self, serializer):
         post = Post.objects.get(uuid=self.kwargs['uuid'])
@@ -94,7 +95,7 @@ class CommentListCreateAPIView(ListCreateAPIView):
 class CommentDestroyAPIView(DestroyAPIView):
     """
     """
-    serilizer_class = CommentSerializer
+    serializer_class = CommentSerializer
     permission_classes = [IsAuthorOrReadOnly]  # No reads on this endpoint
 
     def get_object(self):

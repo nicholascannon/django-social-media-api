@@ -221,3 +221,67 @@ class PinPostViewTest(APITestCase):
 
         p = Post.objects.get(pk=1)
         self.assertEqual(p.pins, 0)
+
+
+class CommentDetailViewTest(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create_user(username='test', password='password')
+        Post.objects.create(text='post1', author=user)
+        Post.objects.create(text='post2', author=user)
+        Post.objects.create(text='post3', author=user)
+        User.objects.create_user(username='test2', password='password')
+
+    def setUp(self):
+        res = self.client.post(reverse('token_login'), data={
+            'username': 'test',
+            'password': 'password',
+        })
+        self.token = res.data.get('access')
+        self.author = User.objects.get(pk=1)
+
+        res = self.client.post(reverse('token_login'), data={
+            'username': 'test2',
+            'password': 'password',
+        })
+        self.token2 = res.data.get('access')
+
+        self.post = Post.objects.get(pk=1)
+
+    def test_create_comment(self):
+        self.assertEqual(self.post.comments.count(), 0)
+
+        res = self.client.post(
+            reverse('comment_list_create', kwargs={'uuid': self.post.uuid}),
+            data={'text': 'Nice Post'},
+            HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.assertEqual(res.status_code, s.HTTP_201_CREATED)
+
+        p = Post.objects.get(pk=1)
+        self.assertEqual(p.comments.count(), 1)
+
+    def test_create_comment_unauth(self):
+        self.assertEqual(self.post.comments.count(), 0)
+
+        res = self.client.post(
+            reverse('comment_list_create', kwargs={'uuid': self.post.uuid}),
+            data={'text': 'Nice Post'})
+        self.assertEqual(res.status_code, s.HTTP_401_UNAUTHORIZED)
+
+        p = Post.objects.get(pk=1)
+        self.assertEqual(p.comments.count(), 0)
+
+    def test_list_comments(self):
+        Comment.objects.create(
+            text='comment', post=self.post, author=self.author)
+        Comment.objects.create(
+            text='comment2', post=self.post, author=self.author)
+        comments = CommentSerializer(instance=Comment.objects.order_by('-date_created').filter(
+            post__uuid=self.post.uuid), many=True)
+
+        res = self.client.get(
+            reverse('comment_list_create', kwargs={'uuid': self.post.uuid}))
+        self.assertEqual(res.status_code, s.HTTP_200_OK)
+        self.assertDictEqual(comments.data[0], res.data[0])
+        self.assertDictEqual(comments.data[1], res.data[1])
