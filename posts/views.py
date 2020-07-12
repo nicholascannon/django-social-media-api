@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status as s
 from django.shortcuts import get_object_or_404
 
-from .models import Post, Comment, PostReport
+from .models import Post, Comment
 from .serializers import PostSerializer
 from .permissions import IsAuthorOrReadOnly
 

@@ -11,8 +11,3 @@ class PostAdmin(admin.ModelAdmin):
 @admin.register(models.Comment)
 class CommentAdmin(admin.ModelAdmin):
     pass
-
-
-@admin.register(models.PostReport)
-class PostReportAdmin(admin.ModelAdmin):
-    pass

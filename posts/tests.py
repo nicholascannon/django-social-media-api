@@ -3,8 +3,8 @@ from rest_framework import status as s
 from django.shortcuts import reverse
 from django.contrib.auth import get_user_model
 
-from .models import Post, Comment, PostReport
-from .serializers import PostSerializer, CommentSerializer, PostReportSerializer
+from .models import Post, Comment
+from .serializers import PostSerializer, CommentSerializer
 
 User = get_user_model()
 
