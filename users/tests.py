@@ -155,7 +155,6 @@ class TestUserApi(APITestCase):
         res = self.client.get(reverse('user_details', args=['test']))
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, user_data.data)
-        print(res.data)
 
     def test_password_change(self):
         res = self._register_user()
