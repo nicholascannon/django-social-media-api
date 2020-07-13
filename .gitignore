@@ -7,3 +7,4 @@ frontend/build/
 db.sqlite3
 *.pyc
 .env
+.coverage

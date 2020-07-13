@@ -39,8 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',
+
     'rest_framework',
+    'django_nose',
+
     'users',
     'posts',
 ]
@@ -127,8 +129,6 @@ STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'users.User'
 
-SITE_ID = 1
-
 LOGIN_REDIRECT_URL = '/'
 
 
@@ -139,14 +139,23 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
-    # TODO: set this in prod settings (no browsable api in prod)
-    # 'DEFAULT_RENDERER_CLASSES': [
-    #     'rest_framework.renderers.JSONRenderer',
-    # ],
 }
+if not DEBUG:
+    # remove browsable API when not in debug
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
+        'rest_framework.renderers.JSONRenderer'
+    ]
 
 
 # SimpleJWT Config
 SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,  # send new refresh token when refreshing
 }
+
+
+# NOSE config
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+NOSE_ARGS = [
+    '--with-coverage',
+    '--cover-package=users,posts',
+]
