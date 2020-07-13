@@ -1,5 +1,7 @@
 from rest_framework.test import APITestCase
 from rest_framework import status as s
+from django.test import TestCase
+import datetime as dt
 from django.shortcuts import reverse
 from django.contrib.auth import get_user_model
 
@@ -7,6 +9,35 @@ from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 
 User = get_user_model()
+
+
+class PostModelTest(TestCase):
+
+    def setUp(self):
+        self.author = User.objects.create_user(
+            username='test', password='password')
+
+    def test_post_create(self):
+        p = Post.objects.create(
+            text='post',
+            author=self.author,
+            pins=0,
+            visible=True,
+            edited=False)
+        self.assertEqual(p.text, 'post')
+        self.assertEqual(p.author.uuid, self.author.uuid)
+        self.assertEqual(p.pins, 0)
+        self.assertEqual(p.edited, False)
+        self.assertEqual(p.visible, True)
+
+    def test_post_comment_count_none(self):
+        p = Post.objects.create(text='post', author=self.author)
+        self.assertEqual(p.get_comment_count(), 0)
+
+    def test_post_comment_count_one(self):
+        p = Post.objects.create(text='post', author=self.author)
+        Comment.objects.create(text='comment', author=self.author, post=p)
+        self.assertEqual(p.get_comment_count(), 1)
 
 
 class PostListCreateTest(APITestCase):
@@ -304,8 +335,8 @@ class CommentRetrieveDestroyViewTest(APITestCase):
         self.token2 = res.data.get('access')
 
         self.url = reverse('delete_comment', kwargs={
-                           'post_uuid': self.post.uuid,
-                           'comment_uuid': self.comment.uuid})
+            'post_uuid': self.post.uuid,
+            'comment_uuid': self.comment.uuid})
 
     def test_delete_comment(self):
         res = self.client.delete(self.url, HTTP_AUTHORIZATION=f'Bearer {self.token}')
