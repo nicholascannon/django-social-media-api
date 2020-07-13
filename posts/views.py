@@ -113,13 +113,14 @@ class CommentRetrieveDestroyAPIView(RetrieveDestroyAPIView):
     of a single comments details.
 
     EXAMPLE:
+        GET -> /posts/<post_uuid>/comments/<comment_uuid>/ -> comment details
         DELETE -> /posts/<post_uuid>/comments/<comment_uuid>/ -> delete comment
     """
     serializer_class = CommentSerializer
     permission_classes = [IsAuthorOrReadOnly]
 
     def get_object(self):
-        comment = Comment.objects.get(uuid=self.kwargs['comment_uuid'],
-                                      post__uuid=self.kwargs['post_uuid'])
+        comment = get_object_or_404(Comment, uuid=self.kwargs['comment_uuid'],
+                                    post__uuid=self.kwargs['post_uuid'])
         self.check_object_permissions(self.request, comment)
         return comment
