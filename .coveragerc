@@ -4,3 +4,4 @@ omit =
     */migrations/*
     */urls.py
     */models.py
+    */__init__.py
