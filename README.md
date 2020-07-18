@@ -6,7 +6,7 @@ An extremely lean and basic social media REST API built with **Django and Django
 
 **Project Goals:**
 
-- Complete a project with Django and DJango-REST-Framework
+- Complete a project with Django and Django-REST-Framework
 - Implement a **test driven approach** for developing a REST API
 - Use **Travis-CI** to run automated tests when committing new code
 - Learn class based and generic views in Django and DRF
