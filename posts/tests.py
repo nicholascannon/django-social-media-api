@@ -2,6 +2,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status as s
 from django.test import TestCase
 import datetime as dt
+from uuid import uuid4
 from django.shortcuts import reverse
 from django.contrib.auth import get_user_model
 
@@ -253,6 +254,11 @@ class PinPostViewTest(APITestCase):
         p = Post.objects.get(pk=1)
         self.assertEqual(p.pins, 0)
 
+    def test_pin_404(self):
+        res = self.client.put(reverse('pin_post', kwargs={'uuid': uuid4()}),
+                              HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        self.assertEqual(res.status_code, s.HTTP_404_NOT_FOUND)
+
 
 class CommentDetailViewTest(APITestCase):
 
@@ -357,3 +363,39 @@ class CommentRetrieveDestroyViewTest(APITestCase):
         comment = CommentSerializer(instance=self.comment)
         res = self.client.get(self.url)
         self.assertDictEqual(comment.data, res.data)
+
+
+class UserPostListAPIViewTest(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        user = User.objects.create_user(username='test', password='password')
+        Post.objects.create(text='post1', author=user)
+        Post.objects.create(text='post2', author=user)
+        Post.objects.create(text='post3', author=user)
+        user = User.objects.create_user(username='test2', password='password')
+
+    def setUp(self):
+        self.user = User.objects.get(pk=1)
+        self.user2 = User.objects.get(pk=2)
+
+    def test_list_posts(self):
+        posts = PostSerializer(instance=Post.objects.order_by('-date_created').filter(
+            author__uuid=self.user.uuid), many=True)
+        res = self.client.get(
+            reverse('get_user_posts', kwargs={'uuid': self.user.uuid}))
+
+        self.assertDictEqual(posts.data[0], res.data[0])
+        self.assertDictEqual(posts.data[1], res.data[1])
+        self.assertDictEqual(posts.data[2], res.data[2])
+
+    def test_no_posts(self):
+        res = self.client.get(
+            reverse('get_user_posts', kwargs={'uuid': self.user2.uuid}))
+
+        self.assertEqual(res.data, [])
+
+    def test_bad_uuid(self):
+        res = self.client.get(
+            reverse('get_user_posts', kwargs={'uuid': uuid4()}))
+        self.assertEqual(res.data, [])

@@ -3,6 +3,7 @@ from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly
 )
 from rest_framework.generics import (
+    ListAPIView,
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     RetrieveDestroyAPIView
@@ -124,3 +125,19 @@ class CommentRetrieveDestroyAPIView(RetrieveDestroyAPIView):
                                     post__uuid=self.kwargs['post_uuid'])
         self.check_object_permissions(self.request, comment)
         return comment
+
+
+class UserPostListAPIView(ListAPIView):
+    """
+    """
+    serializer_class = PostSerializer
+
+    def get_queryset(self):
+        return Post.objects.order_by('-date_created').filter(author__uuid=self.kwargs['uuid'])
+
+
+class RecentPostsAPIView(ListAPIView):
+    """
+    """
+    serializer_class = PostSerializer
+    queryset = Post.objects.order_by('-date_created').all()

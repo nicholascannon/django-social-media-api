@@ -5,7 +5,9 @@ from .views import (
     PostDetailAPIView,
     PinPostAPIView,
     CommentListCreateAPIView,
-    CommentRetrieveDestroyAPIView
+    CommentRetrieveDestroyAPIView,
+    UserPostListAPIView,
+    RecentPostsAPIView
 )
 
 urlpatterns = [
@@ -16,6 +18,6 @@ urlpatterns = [
          name='comment_list_create'),
     path('<post_uuid>/comments/<comment_uuid>/',
          CommentRetrieveDestroyAPIView.as_view(), name='delete_comment'),
-    # path('recent/', , name='recent_posts'),
-    # path('user/<uuid>/', , name='get_user_posts')
+    path('recent/', RecentPostsAPIView.as_view(), name='recent_posts'),
+    path('user/<uuid>/', UserPostListAPIView.as_view(), name='get_user_posts')
 ]
