@@ -1,4 +1,4 @@
-# Wall: A very lean social media API
+# A very small python social media API
 
 ![travisci](https://travis-ci.com/nicholascannon1/wall.svg?branch=master)
 
